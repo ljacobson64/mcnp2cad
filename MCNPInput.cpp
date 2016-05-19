@@ -1333,7 +1333,8 @@ void InputDeck::parseDataCards( LineExtractor& lines ){
     std::string cardname = token_buffer.at(0);
     token_buffer.erase( token_buffer.begin() );
 
-    if( cardname.find("tr") == 0 || cardname.find("*tr") == 0 ){
+    if( ( cardname.find("tr") == 0 || cardname.find("*tr") == 0 ) &&
+          cardname.find("tropt") != 0 ) {
 
       t = DataCard::TR;
       bool degree_format = false;
