@@ -575,9 +575,12 @@ protected:
       else if ( token == "rho" ){
         rho = makedouble(*(++i));
       }
-      else if ( token.length() == 5 && token.substr(0,4) == "imp:" ){
+      else if ( token.length() > 4 && token.substr(0,4) == "imp:" ){
         double imp = makedouble(*(++i));
-        importances[token[4]] = imp;
+        std::string particle_types = token.substr(4);
+        for ( std::string::iterator it = particle_types.begin(); it != particle_types.end(); ++it ){
+          if ( *it != ',' ) importances[*it] = imp;
+        }
       }
       else if( token == "fill" || token == "*fill" ){
 
