@@ -70,9 +70,9 @@ iBase_EntityHandle applyTransform( const Transform& t, iGeom_Instance& igm, iBas
       //iGeom_rotateEnt( igm, e, 180, 0, 0, 0, &igm_result );
 
     //if( !t.hasRot() ){
-      iGeom_reflectEnt( igm, e, 0, 0, 0, 0, 0, 1, &igm_result );
-      iGeom_reflectEnt( igm, e, 0, 0, 0, 0, 1, 0, &igm_result );
-      iGeom_reflectEnt( igm, e, 0, 0, 0, 1, 0, 0, &igm_result );
+      iGeom_reflectEnt( igm, e, 0, 0, 1, &igm_result );
+      iGeom_reflectEnt( igm, e, 0, 1, 0, &igm_result );
+      iGeom_reflectEnt( igm, e, 1, 0, 0, &igm_result );
       //}
       //else{
       //   const Vector3d& axis = t.getAxis();
@@ -636,7 +636,7 @@ protected:
 
     if( ellipse_axis_rad != ellipse_perp_rad ){
       double scalef = ellipse_axis_rad / ellipse_perp_rad;
-      iGeom_scaleEnt( igm, torus, 0, 0, 0, 1.0, 1.0, scalef, &igm_result );
+      iGeom_scaleEnt( igm, torus, 1.0, 1.0, scalef, &igm_result );
       CHECK_IGEOM( igm_result, "Scaling torus" );
     }
     
@@ -725,7 +725,7 @@ protected:
     iGeom_createSphere( igm, radius, &sphere, &igm_result);
     CHECK_IGEOM( igm_result, "making sphere" );
 
-    iGeom_scaleEnt( igm, sphere, 0, 0, 0, sqrt(1/axes.v[0]), sqrt(1/axes.v[1]), sqrt(1/axes.v[2]), &igm_result);
+    iGeom_scaleEnt( igm, sphere, sqrt(1/axes.v[0]), sqrt(1/axes.v[1]), sqrt(1/axes.v[2]), &igm_result);
     CHECK_IGEOM( igm_result, "scaling sphere to ellipsoid" );
 
     iGeom_moveEnt( igm, sphere, center.v[0], center.v[1], center.v[2], &igm_result );
