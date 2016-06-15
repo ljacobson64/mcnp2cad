@@ -582,6 +582,9 @@ protected:
           if ( *it != ',' ) importances[*it] = imp;
         }
       }
+      else if ( token == "bflcl"){
+        bflcl = makedouble(*(++i));
+      }
       else if( token == "fill" || token == "*fill" ){
 
         bool degree_format = (token[0] == '*');
@@ -663,6 +666,7 @@ protected:
   int material;
   double rho; // material density
   std::map<char, double> importances;
+  double bflcl; // magnetic field
 
   geom_list_t geom;
   token_list_t data;
@@ -765,6 +769,7 @@ public:
   virtual int getMat() const { return material; }
   virtual double getRho() const { return rho; }
   virtual const std::map<char,double>& getImportances() const { return importances; }
+  virtual double getBflcl() const { return bflcl; }
 
   virtual void print( std::ostream& s ) const{
     s << "Cell " << ident << " geom " << geom << std::endl;
@@ -783,6 +788,7 @@ protected:
       material = host->material;
       rho = host->rho;
       importances = host->importances;
+      bflcl = host->bflcl;
 
       if( host->trcl->hasData()){
         trcl = host->trcl->clone();

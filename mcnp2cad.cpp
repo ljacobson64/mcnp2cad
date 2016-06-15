@@ -181,6 +181,14 @@ protected:
     return ret;
   }
 
+  std::string bflclName( double bflcl ){
+    std::string ret; 
+    std::stringstream formatter;
+    formatter << "bflcl_" << bflcl;
+    formatter >> ret;
+    return ret;
+  }
+
   class NamedGroup {
   protected:
     std::string name;
@@ -287,15 +295,20 @@ public:
   void setImportances( iBase_EntityHandle cell, const std::map<char, double>& imps ){
     if( Gopt.tag_importances ){
       for( std::map<char, double>::const_iterator i = imps.begin();
-           i != imps.end(); ++i )
+        i != imps.end(); ++i )
       {
-          char impchar = (*i).first;
-          double imp = (*i).second;
-          addToVolumeGroup( cell, importanceName( impchar, imp ) );
+        char impchar = (*i).first;
+        double imp = (*i).second;
+        addToVolumeGroup( cell, importanceName( impchar, imp ) );
       }
     }
   }
 
+  void setBflcl( iBase_EntityHandle cell, double bflcl ){
+    if( Gopt.tag_bflcl ){
+      addToVolumeGroup( cell, bflclName(bflcl) );
+    }
+  }
 
   void updateMaps ( iBase_EntityHandle old_cell, iBase_EntityHandle new_cell );
 
@@ -553,6 +566,7 @@ bool GeometryContext::defineLatticeNode(  CellCard& cell, iBase_EntityHandle cel
     setVolumeCellID(cell_copy, cell.getIdent());
     if( cell.getMat() != 0 ){ setMaterial( cell_copy, cell.getMat(), cell.getRho() ); }
     if( cell.getImportances().size() ){ setImportances( cell_copy, cell.getImportances()); }
+    if( cell.getBflcl() != 0 ){ setBflcl( cell_copy, cell.getBflcl() ); }
     node_subcells.push_back( cell_copy );
   }
   else{
@@ -641,6 +655,7 @@ entity_collection_t GeometryContext::populateCell( CellCard& cell,  iBase_Entity
     setVolumeCellID(cell_shell, cell.getIdent());
     if( cell.getMat() != 0 ){ setMaterial( cell_shell, cell.getMat(), cell.getRho() ); }
     if( cell.getImportances().size() ){ setImportances( cell_shell, cell.getImportances()); }
+    if( cell.getBflcl() != 0 ){ setBflcl( cell_shell, cell.getBflcl() ); }
     return entity_collection_t(1, cell_shell );
   }
   else if(cell.hasFill() && !cell.isLattice()){
@@ -1167,6 +1182,7 @@ int main(int argc, char* argv[]){
   Gopt.infinite_lattice_extra_effort = false;
   Gopt.tag_materials = true;
   Gopt.tag_importances = true;
+  Gopt.tag_bflcl = true;
   Gopt.tag_cell_IDs = true;
   Gopt.make_graveyard = true;
   Gopt.imprint_geom = true;
@@ -1192,10 +1208,12 @@ int main(int argc, char* argv[]){
   po.addOptionHelpHeading( "Options controlling CAD output:" );
   po.addOpt<std::string>(",o", "Give name of output file. Default: " + Gopt.output_file, &Gopt.output_file );
   po.addOpt<double>("tol,t", "Specify a tolerance for merging surfaces", &Gopt.specific_tolerance );
-  po.addOpt<void>("skip-mats,M", "Do not tag materials using group names", 
+  po.addOpt<void>("skip-mats,M", "Do not tag materials using group names",
                   &Gopt.tag_materials, po.store_false );
   po.addOpt<void>("skip-imps,P", "Do not tag cell importances using group names",
                   &Gopt.tag_importances, po.store_false );
+  po.addOpt<void>("skip-bflcl", "Do not tag magnetic field numbers using group names",
+                  &Gopt.tag_bflcl, po.store_false );
   po.addOpt<void>("skip-nums,N", "Do not tag cell numbers using body names",
                   &Gopt.tag_cell_IDs, po.store_false );
   po.addOpt<void>("skip-merge,E", "Do not merge the geometry",

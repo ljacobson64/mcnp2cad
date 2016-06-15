@@ -10,6 +10,7 @@ struct program_option_struct{
   bool infinite_lattice_extra_effort;
   bool tag_materials;
   bool tag_importances;
+  bool tag_bflcl;
   bool tag_cell_IDs;
   bool make_graveyard;
   bool imprint_geom;
