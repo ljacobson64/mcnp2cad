@@ -666,7 +666,7 @@ protected:
   int material;
   double rho; // material density
   std::map<char, double> importances;
-  int bflcl; // magnetic field
+  int bflcl = 0; // magnetic field
 
   geom_list_t geom;
   token_list_t data;
