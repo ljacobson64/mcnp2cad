@@ -76,8 +76,8 @@ public:
 
   virtual int getMat() const = 0;
   virtual double getRho() const = 0;
-  virtual double getBflcl() const = 0;
   virtual const std::map<char,double>& getImportances() const = 0;
+  virtual int getBflcl() const = 0;
 
   virtual void print( std::ostream& s ) const = 0; 
 

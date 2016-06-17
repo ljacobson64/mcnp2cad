@@ -583,7 +583,7 @@ protected:
         }
       }
       else if ( token == "bflcl"){
-        bflcl = makedouble(*(++i));
+        bflcl = makeint(*(++i));
       }
       else if( token == "fill" || token == "*fill" ){
 
@@ -666,7 +666,7 @@ protected:
   int material;
   double rho; // material density
   std::map<char, double> importances;
-  double bflcl; // magnetic field
+  int bflcl; // magnetic field
 
   geom_list_t geom;
   token_list_t data;
@@ -769,7 +769,7 @@ public:
   virtual int getMat() const { return material; }
   virtual double getRho() const { return rho; }
   virtual const std::map<char,double>& getImportances() const { return importances; }
-  virtual double getBflcl() const { return bflcl; }
+  virtual int getBflcl() const { return bflcl; }
 
   virtual void print( std::ostream& s ) const{
     s << "Cell " << ident << " geom " << geom << std::endl;

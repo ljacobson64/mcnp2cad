@@ -181,7 +181,7 @@ protected:
     return ret;
   }
 
-  std::string bflclName( double bflcl ){
+  std::string bflclName( int bflcl ){
     std::string ret; 
     std::stringstream formatter;
     formatter << "bflcl_" << bflcl;
@@ -304,7 +304,7 @@ public:
     }
   }
 
-  void setBflcl( iBase_EntityHandle cell, double bflcl ){
+  void setBflcl( iBase_EntityHandle cell, int bflcl ){
     if( Gopt.tag_bflcl ){
       addToVolumeGroup( cell, bflclName(bflcl) );
     }
