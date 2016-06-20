@@ -569,12 +569,8 @@ protected:
         lat_type = static_cast<lattice_type_t>(lat_designator);
         if( OPT_DEBUG ) std::cout << "cell " << ident << " is lattice type " << lat_type << std::endl;
       }
-      else if ( token == "mat" ){
-        material = makeint(*(++i));
-      }
-      else if ( token == "rho" ){
-        rho = makedouble(*(++i));
-      }
+      else if ( token == "mat" ) material = makeint(*(++i));
+      else if ( token == "rho" ) rho = makedouble(*(++i));
       else if ( token.length() > 4 && token.substr(0,4) == "imp:" ){
         double imp = makedouble(*(++i));
         std::string particle_types = token.substr(4);
@@ -582,9 +578,9 @@ protected:
           if ( *it != ',' ) importances[*it] = imp;
         }
       }
-      else if ( token == "bflcl"){
-        bflcl = makeint(*(++i));
-      }
+      else if ( token == "fcl") fcl = makeint(*(++i));
+      else if ( token == "elpt") elpt = makeint(*(++i));
+      else if ( token == "bflcl") bflcl = makeint(*(++i));
       else if( token == "fill" || token == "*fill" ){
 
         bool degree_format = (token[0] == '*');
@@ -666,6 +662,8 @@ protected:
   int material;
   double rho; // material density
   std::map<char, double> importances;
+  int fcl = 0; // forced collisions
+  int elpt = 0; // energy cutoff
   int bflcl = 0; // magnetic field
 
   geom_list_t geom;
@@ -769,6 +767,8 @@ public:
   virtual int getMat() const { return material; }
   virtual double getRho() const { return rho; }
   virtual const std::map<char,double>& getImportances() const { return importances; }
+  virtual int getFcl() const { return fcl; }
+  virtual int getElpt() const { return elpt; }
   virtual int getBflcl() const { return bflcl; }
 
   virtual void print( std::ostream& s ) const{
@@ -788,17 +788,14 @@ protected:
       material = host->material;
       rho = host->rho;
       importances = host->importances;
+      fcl = host->fcl;
+      elpt = host->elpt;
       bflcl = host->bflcl;
 
-      if( host->trcl->hasData()){
-        trcl = host->trcl->clone();
-      }
-      if( host->hasFill()){
-        fill = host->fill->clone();
-      }
-      if( host->isLattice()){
-        lattice = host->lattice->clone();
-      }
+      if( host->trcl->hasData() ) trcl = host->trcl->clone();
+      if( host->hasFill() ) fill = host->fill->clone();
+      if( host->isLattice() ) lattice = host->lattice->clone();
+
       makeData();
 
       likenbut = false;

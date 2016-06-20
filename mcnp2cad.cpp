@@ -181,6 +181,22 @@ protected:
     return ret;
   }
 
+  std::string fclName( int fcl ){
+    std::string ret; 
+    std::stringstream formatter;
+    formatter << "fcl_" << fcl;
+    formatter >> ret;
+    return ret;
+  }
+
+  std::string elptName( int elpt ){
+    std::string ret; 
+    std::stringstream formatter;
+    formatter << "elpt_" << elpt;
+    formatter >> ret;
+    return ret;
+  }
+
   std::string bflclName( int bflcl ){
     std::string ret; 
     std::stringstream formatter;
@@ -286,10 +302,9 @@ public:
 
   void addToVolumeGroup( iBase_EntityHandle cell, const std::string& groupname );
   void setVolumeCellID( iBase_EntityHandle cell, int ident);
+
   void setMaterial( iBase_EntityHandle cell, int material, double density ){
-    if( Gopt.tag_materials ){
-        addToVolumeGroup( cell, materialName(material,density) );
-    }
+    if( Gopt.tag_materials ) addToVolumeGroup( cell, materialName(material,density) );
   }
 
   void setImportances( iBase_EntityHandle cell, const std::map<char, double>& imps ){
@@ -304,10 +319,16 @@ public:
     }
   }
 
+  void setFcl( iBase_EntityHandle cell, int fcl ){
+    if( Gopt.tag_other ) addToVolumeGroup( cell, fclName(fcl) );
+  }
+
+  void setElpt( iBase_EntityHandle cell, int elpt ){
+    if( Gopt.tag_other ) addToVolumeGroup( cell, elptName(elpt) );
+  }
+
   void setBflcl( iBase_EntityHandle cell, int bflcl ){
-    if( Gopt.tag_bflcl ){
-      addToVolumeGroup( cell, bflclName(bflcl) );
-    }
+    if( Gopt.tag_other ) addToVolumeGroup( cell, bflclName(bflcl) );
   }
 
   void updateMaps ( iBase_EntityHandle old_cell, iBase_EntityHandle new_cell );
@@ -566,6 +587,8 @@ bool GeometryContext::defineLatticeNode(  CellCard& cell, iBase_EntityHandle cel
     setVolumeCellID(cell_copy, cell.getIdent());
     if( cell.getMat() != 0 ){ setMaterial( cell_copy, cell.getMat(), cell.getRho() ); }
     if( cell.getImportances().size() ){ setImportances( cell_copy, cell.getImportances()); }
+    if( cell.getFcl() != 0 ){ setFcl( cell_copy, cell.getFcl() ); }
+    if( cell.getElpt() != 0 ){ setElpt( cell_copy, cell.getElpt() ); }
     if( cell.getBflcl() != 0 ){ setBflcl( cell_copy, cell.getBflcl() ); }
     node_subcells.push_back( cell_copy );
   }
@@ -655,6 +678,8 @@ entity_collection_t GeometryContext::populateCell( CellCard& cell,  iBase_Entity
     setVolumeCellID(cell_shell, cell.getIdent());
     if( cell.getMat() != 0 ){ setMaterial( cell_shell, cell.getMat(), cell.getRho() ); }
     if( cell.getImportances().size() ){ setImportances( cell_shell, cell.getImportances()); }
+    if( cell.getFcl() != 0 ){ setFcl( cell_shell, cell.getFcl() ); }
+    if( cell.getElpt() != 0 ){ setElpt( cell_shell, cell.getElpt() ); }
     if( cell.getBflcl() != 0 ){ setBflcl( cell_shell, cell.getBflcl() ); }
     return entity_collection_t(1, cell_shell );
   }
@@ -1182,7 +1207,7 @@ int main(int argc, char* argv[]){
   Gopt.infinite_lattice_extra_effort = false;
   Gopt.tag_materials = true;
   Gopt.tag_importances = true;
-  Gopt.tag_bflcl = true;
+  Gopt.tag_other = true;
   Gopt.tag_cell_IDs = true;
   Gopt.make_graveyard = true;
   Gopt.imprint_geom = true;
@@ -1212,8 +1237,8 @@ int main(int argc, char* argv[]){
                   &Gopt.tag_materials, po.store_false );
   po.addOpt<void>("skip-imps,P", "Do not tag cell importances using group names",
                   &Gopt.tag_importances, po.store_false );
-  po.addOpt<void>("skip-bflcl", "Do not tag magnetic field numbers using group names",
-                  &Gopt.tag_bflcl, po.store_false );
+  po.addOpt<void>("skip-other,O", "Do not tag other MCNP information using group names",
+                  &Gopt.tag_other, po.store_false );
   po.addOpt<void>("skip-nums,N", "Do not tag cell numbers using body names",
                   &Gopt.tag_cell_IDs, po.store_false );
   po.addOpt<void>("skip-merge,E", "Do not merge the geometry",
