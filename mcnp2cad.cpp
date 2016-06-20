@@ -181,18 +181,18 @@ protected:
     return ret;
   }
 
-  std::string fclName( int fcl ){
+  std::string fclName( char fclchar, int fcl ){
     std::string ret; 
     std::stringstream formatter;
-    formatter << "fcl_" << fcl;
+    formatter << "fcl." << fclchar << "_" << fcl;
     formatter >> ret;
     return ret;
   }
 
-  std::string elptName( int elpt ){
+  std::string elptName( char elptchar, double elpt ){
     std::string ret; 
     std::stringstream formatter;
-    formatter << "elpt_" << elpt;
+    formatter << "elpt." << elptchar << "_" << elpt;
     formatter >> ret;
     return ret;
   }
@@ -319,12 +319,28 @@ public:
     }
   }
 
-  void setFcl( iBase_EntityHandle cell, int fcl ){
-    if( Gopt.tag_other ) addToVolumeGroup( cell, fclName(fcl) );
+  void setFcl( iBase_EntityHandle cell, const std::map<char, int>& fcls ){
+    if( Gopt.tag_other ){
+      for( std::map<char, int>::const_iterator i = fcls.begin();
+        i != fcls.end(); ++i )
+      {
+        char fclchar = (*i).first;
+        int fcl = (*i).second;
+        addToVolumeGroup( cell, fclName( fclchar, fcl ) );
+      }
+    }
   }
 
-  void setElpt( iBase_EntityHandle cell, int elpt ){
-    if( Gopt.tag_other ) addToVolumeGroup( cell, elptName(elpt) );
+  void setElpt( iBase_EntityHandle cell, const std::map<char, double>& elpts ){
+    if( Gopt.tag_other ){
+      for( std::map<char, double>::const_iterator i = elpts.begin();
+        i != elpts.end(); ++i )
+      {
+        char elptchar = (*i).first;
+        double elpt = (*i).second;
+        addToVolumeGroup( cell, elptName( elptchar, elpt ) );
+      }
+    }
   }
 
   void setBflcl( iBase_EntityHandle cell, int bflcl ){
@@ -587,8 +603,8 @@ bool GeometryContext::defineLatticeNode(  CellCard& cell, iBase_EntityHandle cel
     setVolumeCellID(cell_copy, cell.getIdent());
     if( cell.getMat() != 0 ){ setMaterial( cell_copy, cell.getMat(), cell.getRho() ); }
     if( cell.getImportances().size() ){ setImportances( cell_copy, cell.getImportances()); }
-    if( cell.getFcl() != 0 ){ setFcl( cell_copy, cell.getFcl() ); }
-    if( cell.getElpt() != 0 ){ setElpt( cell_copy, cell.getElpt() ); }
+    if( cell.getFcl().size() ){ setFcl( cell_copy, cell.getFcl() ); }
+    if( cell.getElpt().size() ){ setElpt( cell_copy, cell.getElpt() ); }
     if( cell.getBflcl() != 0 ){ setBflcl( cell_copy, cell.getBflcl() ); }
     node_subcells.push_back( cell_copy );
   }
@@ -678,8 +694,8 @@ entity_collection_t GeometryContext::populateCell( CellCard& cell,  iBase_Entity
     setVolumeCellID(cell_shell, cell.getIdent());
     if( cell.getMat() != 0 ){ setMaterial( cell_shell, cell.getMat(), cell.getRho() ); }
     if( cell.getImportances().size() ){ setImportances( cell_shell, cell.getImportances()); }
-    if( cell.getFcl() != 0 ){ setFcl( cell_shell, cell.getFcl() ); }
-    if( cell.getElpt() != 0 ){ setElpt( cell_shell, cell.getElpt() ); }
+    if( cell.getFcl().size() ){ setFcl( cell_shell, cell.getFcl() ); }
+    if( cell.getElpt().size() ){ setElpt( cell_shell, cell.getElpt() ); }
     if( cell.getBflcl() != 0 ){ setBflcl( cell_shell, cell.getBflcl() ); }
     return entity_collection_t(1, cell_shell );
   }

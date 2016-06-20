@@ -574,12 +574,21 @@ protected:
       else if ( token.length() > 4 && token.substr(0,4) == "imp:" ){
         double imp = makedouble(*(++i));
         std::string particle_types = token.substr(4);
-        for ( std::string::iterator it = particle_types.begin(); it != particle_types.end(); ++it ){
+        for ( std::string::iterator it = particle_types.begin(); it != particle_types.end(); ++it )
           if ( *it != ',' ) importances[*it] = imp;
-        }
       }
-      else if ( token == "fcl") fcl = makeint(*(++i));
-      else if ( token == "elpt") elpt = makeint(*(++i));
+      else if ( token.length() > 4 && token.substr(0,4) == "fcl:" ){
+        int fcl = makeint(*(++i));
+        std::string particle_types = token.substr(4);
+        for ( std::string::iterator it = particle_types.begin(); it != particle_types.end(); ++it )
+          if ( *it != ',' ) fcls[*it] = fcl;
+      }
+      else if ( token.length() > 5 && token.substr(0,5) == "elpt:" ){
+        double elpt = makedouble(*(++i));
+        std::string particle_types = token.substr(5);
+        for ( std::string::iterator it = particle_types.begin(); it != particle_types.end(); ++it )
+          if ( *it != ',' ) elpts[*it] = elpt;
+      }
       else if ( token == "bflcl") bflcl = makeint(*(++i));
       else if( token == "fill" || token == "*fill" ){
 
@@ -662,8 +671,8 @@ protected:
   int material;
   double rho; // material density
   std::map<char, double> importances;
-  int fcl = 0; // forced collisions
-  int elpt = 0; // energy cutoff
+  std::map<char, int> fcls; // forced collisions
+  std::map<char, double> elpts; // energy cutoff
   int bflcl = 0; // magnetic field
 
   geom_list_t geom;
@@ -767,8 +776,8 @@ public:
   virtual int getMat() const { return material; }
   virtual double getRho() const { return rho; }
   virtual const std::map<char,double>& getImportances() const { return importances; }
-  virtual int getFcl() const { return fcl; }
-  virtual int getElpt() const { return elpt; }
+  virtual const std::map<char,int>& getFcl() const { return fcls; }
+  virtual const std::map<char,double>& getElpt() const { return elpts; }
   virtual int getBflcl() const { return bflcl; }
 
   virtual void print( std::ostream& s ) const{
@@ -788,8 +797,8 @@ protected:
       material = host->material;
       rho = host->rho;
       importances = host->importances;
-      fcl = host->fcl;
-      elpt = host->elpt;
+      fcls = host->fcls;
+      elpts = host->elpts;
       bflcl = host->bflcl;
 
       if( host->trcl->hasData() ) trcl = host->trcl->clone();
