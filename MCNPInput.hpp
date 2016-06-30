@@ -77,7 +77,7 @@ public:
   virtual int getMat() const = 0;
   virtual double getRho() const = 0;
   virtual const std::map<char,double>& getImportances() const = 0;
-  virtual const std::map<char,int>& getFcl() const = 0;
+  virtual const std::map<char,double>& getFcl() const = 0;
   virtual const std::map<char,double>& getElpt() const = 0;
   virtual int getBflcl() const = 0;
 

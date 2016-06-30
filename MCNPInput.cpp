@@ -578,7 +578,7 @@ protected:
           if ( *it != ',' ) importances[*it] = imp;
       }
       else if ( token.length() > 4 && token.substr(0,4) == "fcl:" ){
-        int fcl = makeint(*(++i));
+        double fcl = makedouble(*(++i));
         std::string particle_types = token.substr(4);
         for ( std::string::iterator it = particle_types.begin(); it != particle_types.end(); ++it )
           if ( *it != ',' ) fcls[*it] = fcl;
@@ -671,7 +671,7 @@ protected:
   int material;
   double rho; // material density
   std::map<char, double> importances;
-  std::map<char, int> fcls; // forced collisions
+  std::map<char, double> fcls; // forced collisions
   std::map<char, double> elpts; // energy cutoff
   int bflcl = 0; // magnetic field
 
@@ -776,7 +776,7 @@ public:
   virtual int getMat() const { return material; }
   virtual double getRho() const { return rho; }
   virtual const std::map<char,double>& getImportances() const { return importances; }
-  virtual const std::map<char,int>& getFcl() const { return fcls; }
+  virtual const std::map<char,double>& getFcl() const { return fcls; }
   virtual const std::map<char,double>& getElpt() const { return elpts; }
   virtual int getBflcl() const { return bflcl; }
 

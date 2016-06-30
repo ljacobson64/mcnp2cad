@@ -181,7 +181,7 @@ protected:
     return ret;
   }
 
-  std::string fclName( char fclchar, int fcl ){
+  std::string fclName( char fclchar, double fcl ){
     std::string ret; 
     std::stringstream formatter;
     formatter << "fcl." << fclchar << "_" << fcl;
@@ -319,13 +319,13 @@ public:
     }
   }
 
-  void setFcl( iBase_EntityHandle cell, const std::map<char, int>& fcls ){
+  void setFcl( iBase_EntityHandle cell, const std::map<char, double>& fcls ){
     if( Gopt.tag_other ){
-      for( std::map<char, int>::const_iterator i = fcls.begin();
+      for( std::map<char, double>::const_iterator i = fcls.begin();
         i != fcls.end(); ++i )
       {
         char fclchar = (*i).first;
-        int fcl = (*i).second;
+        double fcl = (*i).second;
         addToVolumeGroup( cell, fclName( fclchar, fcl ) );
       }
     }
