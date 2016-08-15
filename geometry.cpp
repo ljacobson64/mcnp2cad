@@ -2,8 +2,9 @@
 #include <cfloat>
 #include <iostream>
 #include <cassert>
-
+//#include "GeometryContext.hpp"
 #include "options.hpp"
+
 
 std::ostream& operator<<(std::ostream& str, const Vector3d& v ){
   str << "(" << v.v[0] << ", " << v.v[1] << ", " << v.v[2] << ")";

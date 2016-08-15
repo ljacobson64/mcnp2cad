@@ -60,23 +60,26 @@ static int makeint( const std::string& token ){
 }
 
 static std::vector<std::string> parseID( const token_list_t tokens ){
-  //This function returns the first two or three arguments in token_list, which
-  //name and define the type of surface.
-  std::vector<std::string> identifier (3);
-  identifier[0] = tokens.at(0);
-  if(identifier[0].find_first_of("*+") != identifier[0].npos){
-    std::cerr << "Warning: no special handling for reflecting or white-boundary surfaces" << std::endl;
-    identifier[0][0] = ' ';
+  // This function returns 4 strings pertaining to a surface card: the boundary
+  // condition (if any), the surface ID, the transformation ID, and the type of
+  // surface.
+  std::vector<std::string> identifier (4);
+  identifier[0] = ' ';
+  identifier[1] = tokens.at(0);
+  if(identifier[1].find_first_of("*+") != identifier[0].npos){
+    //std::cerr << "Warning: no special handling for reflecting or white-boundary surfaces" << std::endl;
+    identifier[0][0] = identifier[1][0];
+    identifier[1][0] = ' ';
   } 
   
   if(tokens.at(1).find_first_of("1234567890-") != 0){
-    identifier[1] = '0';
-    identifier[2] = tokens.at(1);
+    identifier[2] = '0';
+    identifier[3] = tokens.at(1);
   }
   else{
-    identifier[1] = tokens.at(1);
-    identifier[2] = tokens.at(2);
-    if( makeint( identifier.at(1) ) == 0 ){
+    identifier[2] = tokens.at(1);
+    identifier[3] = tokens.at(2);
+    if( makeint( identifier.at(2) ) == 0 ){
       std::cerr << "I don't think 0 is a valid surface transformation ID, so I'm ignoring it." << std::endl;
     }
   }
@@ -836,9 +839,14 @@ SurfaceCard::SurfaceCard( InputDeck& deck, const token_list_t tokens ):
   Card(deck)
 {
       std::vector<std::string> identifier = parseID( tokens );
-      ident = makeint(identifier.at(0));
-      tx_id = makeint(identifier.at(1));
-      mnemonic = identifier.at(2);
+
+      if ( identifier.at(0) == "*" ) bdry_cond = "reflect";
+      else if ( identifier.at(0) == "+" ) bdry_cond = "white";
+      else bdry_cond = "";
+
+      ident = makeint(identifier.at(1));
+      tx_id = makeint(identifier.at(2));
+      mnemonic = identifier.at(3);
       size_t idx = 2;
       if( tx_id == 0 ){
         coord_xform = new NullRef<Transform>();

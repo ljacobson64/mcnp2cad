@@ -3,15 +3,14 @@
 #include <cfloat>
 
 #include <cassert>
-
 #include "MCNPInput.hpp"
 #include "volumes.hpp"
 #include "geometry.hpp"
 #include "options.hpp"
+#include "GeometryContext.hpp"
 #include <armadillo>
 
 static Vector3d origin(0,0,0);
-
 
 iBase_EntityHandle makeWorldSphere( iGeom_Instance& igm, double world_size ){
   iBase_EntityHandle world_sphere;
@@ -54,17 +53,15 @@ static iBase_EntityHandle embedWithinWorld( bool positive, iGeom_Instance& igm, 
   return final_body;
 }
 
-
-
 iBase_EntityHandle applyTransform( const Transform& t, iGeom_Instance& igm, iBase_EntityHandle& e ) {
-  
+
   int igm_result;
   if( t.hasRot()  ){
     const Vector3d& axis = t.getAxis();
     iGeom_rotateEnt( igm, e, t.getTheta(), axis.v[0], axis.v[1], axis.v[2], &igm_result );
     CHECK_IGEOM( igm_result, "applying rotation" );
   }
-  
+
   if( t.hasInversion() ){
       //TODO: ask about the right way to do this.  Rotate seems to work, but I don't really know why...
       //iGeom_rotateEnt( igm, e, 180, 0, 0, 0, &igm_result );
@@ -86,12 +83,12 @@ iBase_EntityHandle applyTransform( const Transform& t, iGeom_Instance& igm, iBas
   const Vector3d& translation = t.getTranslation();
   iGeom_moveEnt( igm, e, translation.v[0], translation.v[1], translation.v[2], &igm_result);
   CHECK_IGEOM( igm_result, "applying translation" );
-  
+
   return e;
 }
 
 iBase_EntityHandle applyReverseTransform( const Transform& tx, iGeom_Instance& igm, iBase_EntityHandle& e ) {
-  
+
   int igm_result;
   Transform rev_t = tx.reverse();
 
@@ -109,23 +106,35 @@ iBase_EntityHandle applyReverseTransform( const Transform& tx, iGeom_Instance& i
     iGeom_rotateEnt( igm, e, rev_t.getTheta(), axis.v[0], axis.v[1], axis.v[2], &igm_result );
     CHECK_IGEOM( igm_result, "applying rotation" );
   }
-  
-  
+
   return e;
 }
 
-
 iBase_EntityHandle SurfaceVolume::define( bool positive, iGeom_Instance& igm, double world_size ){
   iBase_EntityHandle handle = this->getHandle( positive, igm, world_size );
-  if( transform ){
+
+  if( transform ) {
     handle = applyTransform( *transform, igm, handle );
   }
+
+  if ( bdry_cond == "reflect" || bdry_cond == "white" ) {
+    std::string boundary_group_string = " ";
+    if ( bdry_cond == "reflect" ) boundary_group_string = "spec.reflect";
+    else if ( bdry_cond == "white" ) boundary_group_string = "white.reflect";
+    iBase_EntityHandle *subsurfaces;
+    int size_allocated, size_occupied, igm_result;
+    iGeom_getEntAdj( igm, handle, 2, &subsurfaces, &size_allocated, &size_occupied, &igm_result );
+    CHECK_IGEOM( igm_result, "getting surfaces comprising volume" );
+    GeometryContext* context = GeometryContext::getInstance();
+    for ( int i = 0; i < size_occupied; i++ ) {
+      context->addToVolumeGroup( subsurfaces[i], boundary_group_string );
+    }
+  }
+
   return handle;
 }
 
-
-
-class PlaneSurface : public SurfaceVolume { 
+class PlaneSurface : public SurfaceVolume {
 
 protected:
   Vector3d normal;
@@ -152,11 +161,9 @@ public:
     offset = D/normal.length() ;
   }
 
-
   PlaneSurface( const Vector3d& normal_p, double offset_p ) :
-    SurfaceVolume(), normal(normal_p), offset(offset_p) 
+    SurfaceVolume(), normal(normal_p), offset(offset_p)
   {}
-
   
   virtual double getFarthestExtentFromOrigin() const{
     // this is a funny situation, since planes are technically infinte...
@@ -166,7 +173,7 @@ public:
   }
 
 protected:
-  virtual iBase_EntityHandle getHandle( bool positive, iGeom_Instance& igm, double world_size){
+  virtual iBase_EntityHandle getHandle( bool positive, iGeom_Instance& igm, double world_size ){
 
     int igm_result;
     iBase_EntityHandle world_sphere = makeWorldSphere(igm, world_size);
@@ -175,11 +182,9 @@ protected:
     iGeom_sectionEnt( igm, world_sphere, 
                       normal.v[0], normal.v[1], normal.v[2], offset, !positive, &hemisphere, &igm_result);
     CHECK_IGEOM( igm_result, "Sectioning world for a plane" );
+
     return hemisphere;
-
-
   }
-
 };
 
 typedef  enum { X=0, Y=1, Z=2 } axis_t;
@@ -202,15 +207,15 @@ protected:
   const double gq_tol = 1e-6;
 
   enum GQ_TYPE {UNKNOWN = 0,
-		ELLIPSOID,
-		ONE_SHEET_HYPERBOLOID,
-		TWO_SHEET_HYPERBOLOID,
-		ELLIPTIC_CONE,
-		ELLIPTIC_PARABOLOID,
-		HYPERBOLIC_PARABOLOID,
-		ELLIPTIC_CYL,
-		HYPERBOLIC_CYL,
-		PARABOLIC_CYL};
+        ELLIPSOID,
+        ONE_SHEET_HYPERBOLOID,
+        TWO_SHEET_HYPERBOLOID,
+        ELLIPTIC_CONE,
+        ELLIPTIC_PARABOLOID,
+        HYPERBOLIC_PARABOLOID,
+        ELLIPTIC_CYL,
+        HYPERBOLIC_CYL,
+        PARABOLIC_CYL};
 public:
   GeneralQuadraticSurface(double A, double B, double C, double D, double E, double F, double G, double H, double J, double K):
     SurfaceVolume(),A_(A),B_(B),C_(C),D_(D),E_(E),F_(F),G_(G),H_(H),J_(J),K_(K) {
@@ -327,19 +332,19 @@ protected:
     int axis;
     //figure out which direction is zero
     if (A_ == 0) {
-	axis = 0;
-	r1 = sqrt(fabs(K_/C_));
-	r2 = sqrt(fabs(K_/B_));
+    axis = 0;
+    r1 = sqrt(fabs(K_/C_));
+    r2 = sqrt(fabs(K_/B_));
     }
     else if (B_ == 0) {
-	axis = 1;
-	r1 = sqrt(fabs(K_/A_));
-	r2 = sqrt(fabs(K_/C_));
+    axis = 1;
+    r1 = sqrt(fabs(K_/A_));
+    r2 = sqrt(fabs(K_/C_));
     }
     else if (C_ == 0) {
-	axis = 2;
-	r1 = sqrt(fabs(K_/A_));
-	r2 = sqrt(fabs(K_/B_));
+    axis = 2;
+    r1 = sqrt(fabs(K_/A_));
+    r2 = sqrt(fabs(K_/B_));
     }
 
     iBase_EntityHandle cyl;
@@ -370,22 +375,22 @@ protected:
     int rot_axis;
     //establish orientation
     if (A_ < 0) {
-	minor_radius = 2*world_size*sqrt(-A_/C_);
-	major_radius = 2*world_size*sqrt(-A_/B_);
-	rot_angle = -90;
-	rot_axis = 1;
+    minor_radius = 2*world_size*sqrt(-A_/C_);
+    major_radius = 2*world_size*sqrt(-A_/B_);
+    rot_angle = -90;
+    rot_axis = 1;
     }
     else if (B_ < 0) { 
-	minor_radius = 2*world_size*sqrt(-B_/A_);
-	major_radius = 2*world_size*sqrt(-B_/C_);
-	rot_angle = 90;
-	rot_axis = 0;
+    minor_radius = 2*world_size*sqrt(-B_/A_);
+    major_radius = 2*world_size*sqrt(-B_/C_);
+    rot_angle = 90;
+    rot_axis = 0;
     }
     else if (C_ < 0) {
-	minor_radius = 2*world_size*sqrt(-C_/A_);
-	major_radius = 2*world_size*sqrt(-C_/B_);
-	rot_angle = 180;
-	rot_axis = 0;
+    minor_radius = 2*world_size*sqrt(-C_/A_);
+    major_radius = 2*world_size*sqrt(-C_/B_);
+    rot_angle = 180;
+    rot_axis = 0;
     }
 
     //create cone
@@ -739,10 +744,7 @@ protected:
 
 };
 
-
-
-static Transform axesImage( const Vector3d& v1, const Vector3d& v2, const Vector3d &v3, const Vector3d& translation = Vector3d() )
-{
+static Transform axesImage( const Vector3d& v1, const Vector3d& v2, const Vector3d &v3, const Vector3d& translation = Vector3d() ){
   Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
   Vector3d a1 = v1.normalize(), a2 = v2.normalize(), a3 = v3.normalize();
     
@@ -775,8 +777,6 @@ static Transform imageZAxisTo( const Vector3d& v, const Vector3d& translation = 
   
 
 }
-
-
 
 class BoxVolume : public SurfaceVolume {
 
@@ -815,7 +815,6 @@ protected:
 
 };
 
-
 class RppVolume : public SurfaceVolume {
 
 protected:
@@ -852,7 +851,6 @@ protected:
   }
 
 };
-
 
 class RecVolume : public SurfaceVolume { 
 
@@ -901,7 +899,6 @@ protected:
   }
 };
 
-
 class RccVolume : public SurfaceVolume {
 
 protected:
@@ -943,7 +940,6 @@ protected:
 
 };
 
-
 #ifdef HAVE_IGEOM_CONE
 class TrcVolume : public SurfaceVolume { 
 
@@ -980,7 +976,6 @@ protected:
 
 };
 #endif
-
 
 class HexVolume : public SurfaceVolume { 
 
@@ -1051,7 +1046,6 @@ protected:
 
 };
 
-
 class VolumeCache{
 
 protected:
@@ -1100,23 +1094,24 @@ SurfaceVolume& makeSurface( const SurfaceCard* card, VolumeCache* v, int facet){
     cache = *v;
   }
 
-  
-  if( cache.contains( card ) ){
+  if( cache.contains( card ) ) {
     return *cache.get( card );
   }
-  else if(facet != 0 ){ 
-    // SurfaceCard variables:  mnemonic, args, coord_xform  
-    const std::string& mnemonic = card->getMnemonic();
-    const std::vector< double >& args = card->getArgs(); 
+
+  // SurfaceCard variables: bdry_cond, mnemonic, args, coord_xform
+  const std::string& bdry_cond = card->getBdryCond();
+  const std::string& mnemonic = card->getMnemonic();
+  const std::vector< double >& args = card->getArgs();
+
+  if( bdry_cond == "reflect" || bdry_cond == "white" ) {
+    surface->setBdryCond( bdry_cond );
+  }
+
+  if(facet != 0 ) {
     // special function for macrobody facets
     surface = FacetSurface( mnemonic, args, facet );
   }
-
-  else{
-  // SurfaceCard variables:  mnemonic, args, coord_xform  
-    const std::string& mnemonic = card->getMnemonic();
-    const std::vector< double >& args = card->getArgs(); 
-
+  else {
     if( mnemonic == "so"){
       surface = new SphereSurface( origin, args.at(0) );
     }
@@ -1164,7 +1159,7 @@ SurfaceVolume& makeSurface( const SurfaceCard* card, VolumeCache* v, int facet){
 
         // cos of the angle between v1 and normal 
         double angle = normal.dot( v1.normalize() );
-	  
+
         // invert the normal if the angle is > 90 degrees, which indicates
         // that reversal is required.
         if( angle < 0 ){
@@ -1173,7 +1168,6 @@ SurfaceVolume& makeSurface( const SurfaceCard* card, VolumeCache* v, int facet){
 
         //std::cout << normal << " " << p.length() << " : " << angle << std::endl;
         surface = new PlaneSurface( normal, p.length() );
-
 
       }
       else{ 
@@ -1286,7 +1280,7 @@ SurfaceVolume& makeSurface( const SurfaceCard* card, VolumeCache* v, int facet){
           double m = (args.at(3) - args.at(1))/(args.at(2)-args.at(0));
           double apex_p = args.at(0) - args.at(1)/m;
           surface = new ConeSurface( X, m*m, apex_p, (m > 0 ? 1 : -1 ) );
-	    }
+        }
         break;
       default:
         throw std::runtime_error( mnemonic + " is only a supported surface with 2 or 4 arguments" );
@@ -1343,23 +1337,23 @@ SurfaceVolume& makeSurface( const SurfaceCard* card, VolumeCache* v, int facet){
     else{
       throw std::runtime_error( mnemonic + " is not a supported surface" );
     }
-  } 
+
+  }
   if( card->getTransform().hasData() ){
     const Transform& transform = card->getTransform().getData();
     surface->setTransform( &transform );
   }
-  
+
   cache.insert( card, surface );
   return *surface;
-    
+
 }
-  
 
 SurfaceVolume* FacetSurface( const std::string mnemonic, const std::vector< double > args, int facet ){
   if( mnemonic == "rcc" ){
     return rccFacet( args, facet );
   }
-  else if(mnemonic == "box"){
+  else if( mnemonic == "box" ){
     return boxFacet( args, facet );
   }
   else if( mnemonic == "rpp"){
@@ -1373,10 +1367,6 @@ SurfaceVolume* FacetSurface( const std::string mnemonic, const std::vector< doub
   }
   throw std::runtime_error( mnemonic + " does not have macrobody facet support at this time." );
 }    
-
-
-
-
 
 SurfaceVolume* rccFacet( const std::vector< double > args, int facet ){
   if( facet == 1 ){
@@ -1452,7 +1442,6 @@ SurfaceVolume* hexFacet( const std::vector< double > args, int facet ){
   }
 }
 
-
 SurfaceVolume* recFacet( const std::vector< double > args, int facet ){
   if( facet == 1 ){
     //elliptical cylinder surface
@@ -1472,4 +1461,3 @@ SurfaceVolume* recFacet( const std::vector< double > args, int facet ){
     throw std::runtime_error( "rec only has 3 facets." );
   }
 }
-

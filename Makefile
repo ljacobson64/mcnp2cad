@@ -12,9 +12,8 @@
 
 -include ${CGM_BASE_DIR}/lib/iGeom-Defs.inc
 
-
-CXXSOURCES = mcnp2cad.cpp MCNPInput.cpp volumes.cpp geometry.cpp ProgOptions.cpp
-CXXOBJS = mcnp2cad.o MCNPInput.o volumes.o geometry.o ProgOptions.o
+CXXSOURCES = mcnp2cad.cpp GeometryContext.cpp MCNPInput.cpp volumes.cpp geometry.cpp ProgOptions.cpp
+CXXOBJS = mcnp2cad.o GeometryContext.o MCNPInput.o volumes.o geometry.o ProgOptions.o 
 
 # Remove HAVE_IGEOM_CONE from the next line if using old iGeom implementation
 CXXFLAGS = -g -std=c++11 -Wall -Wextra -DUSING_CGMA -DHAVE_IGEOM_CONE -I${ARMADILLO_BASE_DIR}/include
@@ -29,12 +28,14 @@ mcnp2cad: ${CXXOBJS} Makefile
 #	libtool --mode=link ${CXX} ${CXXFLAGS} -o $@ ${CXXOBJS}  ${LDFLAGS} 
 
 
-geometry.o: geometry.cpp geometry.hpp dataref.hpp
+geometry.o: geometry.cpp geometry.hpp dataref.hpp 
 volumes.o: volumes.cpp volumes.hpp geometry.hpp MCNPInput.hpp
 MCNPInput.o: MCNPInput.cpp MCNPInput.hpp geometry.hpp dataref.hpp options.hpp 
 mcnp2cad.o: mcnp2cad.cpp MCNPInput.hpp geometry.hpp dataref.hpp \
-            options.hpp volumes.hpp ProgOptions.hpp version.hpp
+            options.hpp volumes.hpp ProgOptions.hpp version.hpp \
+            GeometryContext.hpp
 ProgOptions.o: ProgOptions.cpp ProgOptions.hpp
+GeometryContext.o: GeometryContext.cpp GeometryContext.hpp
 
 .cpp.o:
 	${CXX} ${CXXFLAGS} ${IGEOM_CPPFLAGS} -o $@ -c $<

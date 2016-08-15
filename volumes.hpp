@@ -2,24 +2,28 @@
 #define MCNP2CAD_VOLUMES_H
 
 #include <cstdlib>
+#include <string>
 #include "iGeom.h"
+#include <vector>
 
 
 class Transform;
 class SurfaceCard;
 
-class SurfaceVolume{
+class SurfaceVolume {
 
 protected:
   const Transform* transform;
+  std::string bdry_cond;
 
 public:
-  SurfaceVolume( const Transform* transform_p = NULL):
-    transform(transform_p)
+  SurfaceVolume( const Transform* transform_p = NULL, const std::string bdry_cond_p = NULL ):
+    transform(transform_p), bdry_cond(bdry_cond_p)
   {}
   virtual ~SurfaceVolume(){}
 
-  void setTransform( const Transform* transform_p ){ transform = transform_p; }
+  void setBdryCond( std::string bdry_cond_p ) { bdry_cond = bdry_cond_p; }
+  void setTransform( const Transform* transform_p ) { transform = transform_p; }
   
   virtual double getFarthestExtentFromOrigin( ) const = 0;
   virtual iBase_EntityHandle define( bool positive, iGeom_Instance& igm, double world_size );
@@ -68,11 +72,6 @@ iBase_EntityHandle applyTransform( const Transform& t, iGeom_Instance& igm, iBas
 
 extern
 iBase_EntityHandle applyReverseTransform( const Transform& tx, iGeom_Instance& igm, iBase_EntityHandle& e ) ;
-
-
-
-
-
 
 // TODO: clean this igeom check function up
 #define CHECK_BUF_SIZE 512

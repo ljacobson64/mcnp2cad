@@ -90,6 +90,7 @@ std::ostream& operator<<(std::ostream& str, const CellCard::geom_list_entry_t& t
  */
 class SurfaceCard : public Card {
 protected:
+  std::string bdry_cond;
   int ident, tx_id;
   DataRef<Transform> *coord_xform;
   std::string mnemonic;
@@ -104,6 +105,7 @@ public:
   void print( std::ostream& s ) const ;
 
   const DataRef<Transform>& getTransform() const ; 
+  const std::string& getBdryCond() const { return bdry_cond; }
   const std::string& getMnemonic() const { return mnemonic; }
   const std::vector<double>& getArgs() const { return args; }
 
