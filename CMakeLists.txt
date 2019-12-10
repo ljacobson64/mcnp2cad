@@ -19,10 +19,6 @@ endif()
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
-# These directories need to be defined by the user.
-include_directories(${IGEOM_INCLUDE_DIR})
-find_library(IGEOM_LIB NAMES iGeom HINTS ${IGEOM_LIB_DIR})
-
 SET(LIB_SRC
     mcnp2cad.cpp
     mcnp2cad.hpp
@@ -38,7 +34,7 @@ SET(LIB_SRC
 )
 
 add_library(mcnp2cad SHARED ${LIB_SRC})
-target_link_libraries(mcnp2cad ${IGEOM_LIB})
+target_link_libraries(mcnp2cad iGeom)
 
 add_executable(test_GQ test_GQ.cpp GQ_Characterize.cpp)
 target_link_libraries(test_GQ)
